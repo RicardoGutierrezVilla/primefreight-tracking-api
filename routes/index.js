@@ -5,7 +5,7 @@ const router = Router();
 // Create tracking request - forwards to Terminal49 API
 router.post('/tracking-requests', async (req, res) => {
 	try {
-		const upstreamResponse = await fetch('http://api.terminal49.com/v2/tracking_requests', {
+		const upstreamResponse = await fetch('https://api.terminal49.com/v2/tracking_requests', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
