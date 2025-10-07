@@ -2,10 +2,32 @@ import { Router } from 'express';
 
 const router = Router();
 
-// Create tracking request
-router.post('/tracking-requests', (req, res) => {
-	const { body } = req;
-	res.status(201).json({ message: 'create tracking request - placeholder', data: body || null });
+// Create tracking request - forwards to Terminal49 API
+router.post('/tracking-requests', async (req, res) => {
+	try {
+		const upstreamResponse = await fetch('http://api.terminal49.com/v2/tracking_requests', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Token ${process.env.TERMINAL49_TOKEN || '2ZHS6xHrBpHKTP7RSPMWR5T8'}`,
+			},
+			body: JSON.stringify(req.body ?? {}),
+		});
+
+		const contentType = upstreamResponse.headers.get('content-type') || '';
+		const status = upstreamResponse.status;
+
+		if (contentType.includes('application/json')) {
+			const data = await upstreamResponse.json();
+			return res.status(status).json(data);
+		}
+
+		const text = await upstreamResponse.text();
+		return res.status(status).send(text);
+	} catch (error) {
+		console.error('Error forwarding to Terminal49:', error);
+		return res.status(502).json({ error: 'Bad Gateway', message: 'Failed to reach Terminal49' });
+	}
 });
 
 // Get tracking request
