@@ -18,17 +18,15 @@ app.get('/health', (req, res) => {
 	res.status(200).json({ status: 'ok', service: 'primefreight-tracking-api' });
 });
 
-// Admin token issuance (protected by ADMIN_SECRET)
+// Username/password login -> issues Bearer token (2 hours)
 app.post('/auth/tokens', (req, res) => {
-    const adminSecret = process.env.ADMIN_SECRET || '';
-    const provided = req.headers['x-admin-secret'] || '';
-    if (!adminSecret || provided !== adminSecret) {
-        return res.status(403).json({ error: 'Forbidden', message: 'Prime Freight: invalid admin secret' });
+    const { username, password } = req.body || {};
+    if (username !== 'primed' || password !== 'freight2025') {
+        return res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
     }
-    const { subject, expiresIn } = req.body || {};
     try {
-        const token = issueToken({ sub: subject || 'client' }, { expiresIn });
-        return res.status(201).json({ token, type: 'Token', expiresIn: expiresIn || '7d' });
+        const token = issueToken({ sub: username }, { expiresIn: '2h' });
+        return res.status(201).json({ token, type: 'Bearer', expiresIn: '2h' });
     } catch (err) {
         console.error('Prime Freight token issuance error:', err);
         return res.status(500).json({ error: 'Internal Server Error', message: 'Token issuance failed' });
@@ -54,5 +52,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
 	console.log(`Server listening on port ${PORT}`);
 });
-
 
