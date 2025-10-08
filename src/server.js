@@ -19,7 +19,7 @@ app.get('/health', (req, res) => {
 });
 
 // Username/password login -> issues Bearer token (2 hours)
-app.post('/auth/tokens', (req, res) => {
+app.post('/api/v1/auth/tokens', (req, res) => {
     const { username, password } = req.body || {};
     if (username !== 'primed' || password !== 'freight2025') {
         return res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
@@ -34,7 +34,7 @@ app.post('/auth/tokens', (req, res) => {
 });
 
 // Routes (protected)
-app.use('/api', apiKeyAuth, (await import('../routes/index.js')).default);
+app.use('/api/v1', apiKeyAuth, (await import('../routes/index.js')).default);
 
 // 404 handler
 app.use((req, res) => {
@@ -52,4 +52,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
 	console.log(`Server listening on port ${PORT}`);
 });
-

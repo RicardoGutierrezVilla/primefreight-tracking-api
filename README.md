@@ -24,16 +24,16 @@ Server runs on `http://localhost:3000` by default.
 
 ### Base path
 
-- All API endpoints are under `/api`.
+- All API endpoints are under `/api/v1`.
 
 ### Endpoints
 
-- POST `/auth/tokens` — login with username/password, returns Bearer JWT (2h)
-- POST `/api/tracking-requests` (proxies upstream)
-- GET `/api/tracking-requests/:id` (proxies upstream)
-- GET `/api/containers/:containerId` (proxies upstream)
-- GET `/api/containers/:containerId/raw-events` (proxies upstream)
-- GET `/api/containers/:containerId/transport-events` (proxies upstream)
+- POST `/api/v1/auth/tokens` — login with username/password, returns Bearer JWT (2h)
+- POST `/api/v1/tracking-requests` (proxies upstream)
+- GET `/api/v1/tracking-requests/:id` (proxies upstream)
+- GET `/api/v1/containers/:containerId` (proxies upstream)
+- GET `/api/v1/containers/:containerId/raw-events` (proxies upstream)
+- GET `/api/v1/containers/:containerId/transport-events` (proxies upstream)
 
 ### Authentication
 
@@ -46,7 +46,7 @@ curl -sS \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"username":"primed","password":"freight2025"}' \
-  http://localhost:3000/auth/tokens
+  http://localhost:3000/api/v1/auth/tokens
 ```
 
 Response: `{ "token": "<jwt>", "type": "Bearer", "expiresIn": "2h" }`
@@ -56,7 +56,7 @@ Response: `{ "token": "<jwt>", "type": "Bearer", "expiresIn": "2h" }`
 ```bash
 curl -sS \
   -H "Authorization: Bearer <jwt>" \
-  http://localhost:3000/api/containers/ABC123
+  http://localhost:3000/api/v1/containers/ABC123
 ```
 
 Notes:
@@ -68,4 +68,3 @@ Notes:
 - ESM is enabled (`type: module`).
 - Edit or add endpoints in `routes/index.js`.
 - Responses are sanitized to remove upstream provider metadata (links, self, href, terminal49 references).
-
