@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
 function sanitizeUpstreamPayload(input) {
-    const blockedKeys = new Set(['links', '_links', 'self', 'href']);
-    const blockedSubstr = ['terminal49.com', 'terminal49'];
+    const blockedKeys = new Set(['links', '_links', 'self', 'href', 'meta', 'jsonapi']);
+    const blockedSubstr = ['terminal49.com', 'terminal49', 'terminal40'];
 
     function shouldRedactValue(value) {
         if (typeof value !== 'string') return false;
@@ -73,7 +73,7 @@ router.get('/tracking-requests/:id', async (req, res) => {
         const contentType = upstreamResponse.headers.get('content-type') || '';
         const status = upstreamResponse.status;
 
-        if (contentType.includes('application/json')) {
+        if (contentType.includes('json')) {
             const data = await upstreamResponse.json();
             const sanitized = sanitizeUpstreamPayload(data);
             return res.status(status).json(sanitized);
@@ -101,7 +101,7 @@ router.get('/containers/:containerId', async (req, res) => {
         const contentType = upstreamResponse.headers.get('content-type') || '';
         const status = upstreamResponse.status;
 
-        if (contentType.includes('application/json')) {
+        if (contentType.includes('json')) {
             const data = await upstreamResponse.json();
             const sanitized = sanitizeUpstreamPayload(data);
             return res.status(status).json(sanitized);
@@ -129,7 +129,7 @@ router.get('/containers/:containerId/raw-events', async (req, res) => {
         const contentType = upstreamResponse.headers.get('content-type') || '';
         const status = upstreamResponse.status;
 
-        if (contentType.includes('application/json')) {
+        if (contentType.includes('json')) {
             const data = await upstreamResponse.json();
             const sanitized = sanitizeUpstreamPayload(data);
             return res.status(status).json(sanitized);
@@ -157,7 +157,7 @@ router.get('/containers/:containerId/transport-events', async (req, res) => {
         const contentType = upstreamResponse.headers.get('content-type') || '';
         const status = upstreamResponse.status;
 
-        if (contentType.includes('application/json')) {
+        if (contentType.includes('json')) {
             const data = await upstreamResponse.json();
             const sanitized = sanitizeUpstreamPayload(data);
             return res.status(status).json(sanitized);
