@@ -1,5 +1,34 @@
 import { Router } from 'express';
 
+function sanitizeUpstreamPayload(input) {
+    const blockedKeys = new Set(['links', '_links', 'self', 'href']);
+    const blockedSubstr = ['terminal49.com', 'terminal49'];
+
+    function shouldRedactValue(value) {
+        if (typeof value !== 'string') return false;
+        const lower = value.toLowerCase();
+        return blockedSubstr.some((s) => lower.includes(s));
+    }
+
+    function sanitize(value) {
+        if (value === null || value === undefined) return value;
+        if (Array.isArray(value)) return value.map(sanitize);
+        if (typeof value === 'object') {
+            const result = {};
+            for (const [key, v] of Object.entries(value)) {
+                if (blockedKeys.has(key)) continue;
+                if (shouldRedactValue(v)) continue;
+                result[key] = sanitize(v);
+            }
+            return result;
+        }
+        if (shouldRedactValue(value)) return undefined;
+        return value;
+    }
+
+    return sanitize(input);
+}
+
 const router = Router();
 
 // Create tracking request - forwards to Terminal49 API
@@ -46,7 +75,8 @@ router.get('/tracking-requests/:id', async (req, res) => {
 
         if (contentType.includes('application/json')) {
             const data = await upstreamResponse.json();
-            return res.status(status).json(data);
+            const sanitized = sanitizeUpstreamPayload(data);
+            return res.status(status).json(sanitized);
         }
 
         const text = await upstreamResponse.text();
@@ -73,7 +103,8 @@ router.get('/containers/:containerId', async (req, res) => {
 
         if (contentType.includes('application/json')) {
             const data = await upstreamResponse.json();
-            return res.status(status).json(data);
+            const sanitized = sanitizeUpstreamPayload(data);
+            return res.status(status).json(sanitized);
         }
 
         const text = await upstreamResponse.text();
@@ -100,7 +131,8 @@ router.get('/containers/:containerId/raw-events', async (req, res) => {
 
         if (contentType.includes('application/json')) {
             const data = await upstreamResponse.json();
-            return res.status(status).json(data);
+            const sanitized = sanitizeUpstreamPayload(data);
+            return res.status(status).json(sanitized);
         }
 
         const text = await upstreamResponse.text();
@@ -127,7 +159,8 @@ router.get('/containers/:containerId/transport-events', async (req, res) => {
 
         if (contentType.includes('application/json')) {
             const data = await upstreamResponse.json();
-            return res.status(status).json(data);
+            const sanitized = sanitizeUpstreamPayload(data);
+            return res.status(status).json(sanitized);
         }
 
         const text = await upstreamResponse.text();
