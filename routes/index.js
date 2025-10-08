@@ -111,10 +111,31 @@ router.get('/containers/:containerId/raw-events', async (req, res) => {
     }
 });
 
-// Get transport events
-router.get('/containers/:containerId/transport-events', (req, res) => {
-	const { containerId } = req.params;
-	res.status(200).json({ message: 'get transport events - placeholder', containerId, events: [] });
+// Get transport events - forwards to Terminal49 API
+router.get('/containers/:containerId/transport-events', async (req, res) => {
+    const { containerId } = req.params;
+    try {
+        const upstreamResponse = await fetch(`https://api.terminal49.com/v2/containers/${encodeURIComponent(containerId)}/transport_events`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Token ${process.env.TERMINAL49_TOKEN || '2ZHS6xHrBpHKTP7RSPMWR5T8'}`,
+            },
+        });
+
+        const contentType = upstreamResponse.headers.get('content-type') || '';
+        const status = upstreamResponse.status;
+
+        if (contentType.includes('application/json')) {
+            const data = await upstreamResponse.json();
+            return res.status(status).json(data);
+        }
+
+        const text = await upstreamResponse.text();
+        return res.status(status).send(text);
+    } catch (error) {
+        console.error('Prime Freight proxy error (transport-events GET):', error);
+        return res.status(502).json({ error: 'Bad Gateway', message: 'Prime Freight upstream request failed' });
+    }
 });
 
 export default router;
