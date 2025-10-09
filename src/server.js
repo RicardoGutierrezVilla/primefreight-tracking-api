@@ -18,6 +18,25 @@ app.use(morgan('dev'));
 
 // Serve Swagger UI (static)
 const docsDir = path.join(__dirname, '..', 'docs');
+// Loosen CSP only for /docs so Swagger can load CDN assets
+try {
+  // Helmet v8 exposes contentSecurityPolicy; guard in case of changes
+  if (helmet.contentSecurityPolicy) {
+    app.use(
+      '/docs',
+      helmet.contentSecurityPolicy({
+        useDefaults: true,
+        directives: {
+          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          "script-src": ["'self'", 'https://unpkg.com'],
+          "style-src": ["'self'", 'https://unpkg.com', "'unsafe-inline'"],
+          "img-src": ["'self'", 'data:'],
+          "connect-src": ["'self'", 'https://api.primefreight.com', 'http://localhost:3000'],
+        },
+      })
+    );
+  }
+} catch (_) {}
 app.use('/docs', express.static(docsDir));
 app.get('/swagger', (req, res) => res.redirect('/docs/swagger.html'));
 
