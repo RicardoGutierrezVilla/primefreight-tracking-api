@@ -28,7 +28,7 @@ try {
         useDefaults: true,
         directives: {
           ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-          "script-src": ["'self'", 'https://unpkg.com'],
+          "script-src": ["'self'", 'https://unpkg.com', "'unsafe-inline'"],
           "style-src": ["'self'", 'https://unpkg.com', "'unsafe-inline'"],
           "img-src": ["'self'", 'data:'],
           "connect-src": ["'self'", 'https://api.primefreight.com', 'http://localhost:3000'],
@@ -39,6 +39,8 @@ try {
 } catch (_) {}
 app.use('/docs', express.static(docsDir));
 app.get('/swagger', (req, res) => res.redirect('/docs/swagger.html'));
+// Avoid 401s on favicon when visiting docs
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // Health check
 app.get('/health', (req, res) => {
