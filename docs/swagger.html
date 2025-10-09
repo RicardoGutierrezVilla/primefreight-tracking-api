@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PrimeFreight Tracking API – Swagger</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      body { margin: 0; }
+      #swagger-ui { min-height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      const spec = {
+        openapi: "3.0.3",
+        info: {
+          title: "PrimeFreight Tracking API",
+          version: "1.0.0",
+          description: "Express proxy over upstream tracking APIs with Bearer auth and response sanitization.",
+        },
+        servers: [
+          { url: "https://api.primefreight.com", description: "Production" },
+          { url: "http://localhost:3000", description: "Local" },
+        ],
+        components: {
+          securitySchemes: {
+            bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+          },
+          schemas: {
+            Health: {
+              type: "object",
+              properties: {
+                status: { type: "string", example: "ok" },
+                service: { type: "string", example: "primefreight-tracking-api" },
+              },
+            },
+            TokenRequest: {
+              type: "object",
+              required: ["username", "password"],
+              properties: {
+                username: { type: "string", example: "primed" },
+                password: { type: "string", example: "freight2025" },
+              },
+            },
+            TokenResponse: {
+              type: "object",
+              properties: {
+                token: { type: "string", description: "JWT access token" },
+                type: { type: "string", example: "Bearer" },
+                expiresIn: { type: "string", example: "2h" },
+              },
+            },
+            TrackingRequestCreate: {
+              type: "object",
+              required: ["data"],
+              properties: {
+                data: {
+                  type: "object",
+                  required: ["attributes", "type"],
+                  properties: {
+                    type: { type: "string", enum: ["tracking_request"], example: "tracking_request" },
+                    attributes: {
+                      type: "object",
+                      required: ["request_type", "request_number"],
+                      properties: {
+                        request_type: { type: "string", enum: ["container", "booking", "bill_of_lading"], example: "container" },
+                        request_number: { type: "string", example: "CMAU1246652" },
+                        scac: { type: "string", example: "CMDU" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            Error: {
+              type: "object",
+              properties: {
+                error: { type: "string", example: "Unauthorized" },
+                message: { type: "string", example: "Invalid credentials" },
+              },
+            },
+            AnyObject: { type: "object", additionalProperties: true },
+          },
+        },
+        security: [{ bearerAuth: [] }],
+        paths: {
+          "/health": {
+            get: {
+              summary: "Health check",
+              description: "Returns service status.",
+              security: [],
+              responses: {
+                200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/Health" } } } },
+              },
+            },
+          },
+          "/auth/tokens": {
+            post: {
+              summary: "Login (issue Bearer JWT)",
+              description: "Authenticate with username/password and receive a JWT valid for 2 hours.",
+              security: [],
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": { schema: { $ref: "#/components/schemas/TokenRequest" } },
+                },
+              },
+              responses: {
+                201: { description: "Created", content: { "application/json": { schema: { $ref: "#/components/schemas/TokenResponse" } } } },
+                401: { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+                500: { description: "Internal Server Error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+              },
+            },
+          },
+          "/tracking-requests": {
+            post: {
+              summary: "Create tracking request (proxy)",
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/TrackingRequestCreate" },
+                    example: {
+                      data: {
+                        attributes: {
+                          request_type: "container",
+                          request_number: "CMAU1246652",
+                          scac: "CMDU"
+                        },
+                        type: "tracking_request"
+                      }
+                    },
+                  },
+                },
+              },
+              responses: {
+                200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/AnyObject" } } } },
+                4: { description: "Client error" },
+                5: { description: "Server/Upstream error" },
+              },
+            },
+          },
+          "/tracking-requests/{id}": {
+            get: {
+              summary: "Get tracking request (proxy)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } },
+              ],
+              responses: {
+                200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/AnyObject" } } } },
+                404: { description: "Not Found" },
+              },
+            },
+          },
+          "/containers/{containerId}": {
+            get: {
+              summary: "Get container (proxy)",
+              parameters: [
+                { name: "containerId", in: "path", required: true, schema: { type: "string" }, example: "ABC123" },
+              ],
+              responses: {
+                200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/AnyObject" } } } },
+                404: { description: "Not Found" },
+              },
+            },
+          },
+          "/containers/{containerId}/raw-events": {
+            get: {
+              summary: "Get raw events (proxy)",
+              parameters: [
+                { name: "containerId", in: "path", required: true, schema: { type: "string" } },
+              ],
+              responses: {
+                200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/AnyObject" } } } },
+                404: { description: "Not Found" },
+              },
+            },
+          },
+          "/containers/{containerId}/transport-events": {
+            get: {
+              summary: "Get transport events (proxy)",
+              parameters: [
+                { name: "containerId", in: "path", required: true, schema: { type: "string" } },
+              ],
+              responses: {
+                200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/AnyObject" } } } },
+                404: { description: "Not Found" },
+              },
+            },
+          },
+        },
+      };
+
+      window.ui = SwaggerUIBundle({
+        dom_id: '#swagger-ui',
+        spec,
+        deepLinking: true,
+        layout: 'BaseLayout',
+        presets: [SwaggerUIBundle.presets.apis],
+      });
+    </script>
+  </body>
+  </html>

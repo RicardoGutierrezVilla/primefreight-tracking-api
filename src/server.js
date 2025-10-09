@@ -4,14 +4,22 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { apiKeyAuth } from './auth.js';
 import { issueToken } from './jwt.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Serve Swagger UI (static)
+const docsDir = path.join(__dirname, '..', 'docs');
+app.use('/docs', express.static(docsDir));
+app.get('/swagger', (req, res) => res.redirect('/docs/swagger.html'));
 
 // Health check
 app.get('/health', (req, res) => {

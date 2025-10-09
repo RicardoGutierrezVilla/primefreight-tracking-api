@@ -22,6 +22,10 @@ Server runs on `http://localhost:3000` by default.
 
 - GET `/health`
 
+### Docs
+
+- Interactive Swagger UI: open `/docs/swagger.html` (or `/swagger` shortcut)
+
 ### Base path
 
 - API endpoints are exposed at the root (no `/api` prefix).

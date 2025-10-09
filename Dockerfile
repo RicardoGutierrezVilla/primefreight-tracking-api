@@ -11,6 +11,7 @@ RUN npm ci --omit=dev
 # Copy app source
 COPY src ./src
 COPY routes ./routes
+COPY docs ./docs
 
 # Cloud Run sets PORT; default to 8080 for local
 ENV PORT=8080
